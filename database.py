@@ -12,7 +12,9 @@ def connect_db():
         user=st.secrets["MYSQLUSER"],
         password=st.secrets["MYSQLPASSWORD"],
         database=st.secrets["MYSQLDATABASE"],
-        port=int(st.secrets["MYSQLPORT"])
+        port=int(st.secrets["MYSQLPORT"]),
+        connection_timeout=30,
+        auth_plugin='mysql_native_password'
     )
 
 
