@@ -2,10 +2,6 @@ import streamlit as st
 import mysql.connector
 import traceback
 
-
-# =========================
-# DATABASE CONNECTION
-# =========================
 def connect_db():
     return mysql.connector.connect(
         host=st.secrets["MYSQLHOST"],
@@ -17,10 +13,6 @@ def connect_db():
         auth_plugin='mysql_native_password'
     )
 
-
-# =========================
-# SAVE PREDICTION FUNCTION
-# =========================
 def save_prediction(data, pred):
     conn = None
     cursor = None
@@ -32,15 +24,9 @@ def save_prediction(data, pred):
         query = """
         INSERT INTO predictions 
         (
-            CreditScore,
-            Age,
-            Tenure,
-            Balance,
-            NumOfProducts,
-            HasCrCard,
-            IsActiveMember,
-            EstimatedSalary,
-            prediction
+            CreditScore, Age, Tenure, Balance,
+            NumOfProducts, HasCrCard, IsActiveMember,
+            EstimatedSalary, prediction
         )
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
@@ -57,19 +43,16 @@ def save_prediction(data, pred):
             pred
         )
 
-        print("🔵 INSERT VALUES:", values)
-
         cursor.execute(query, values)
         conn.commit()
 
-        print("✅ Data inserted successfully into Railway DB")
-
-    except Exception as e:
-        print("❌ DATABASE ERROR OCCURRED")
+    except Exception:
+        print("❌ DATABASE ERROR")
         traceback.print_exc()
 
     finally:
-        if cursor:
+        # 🔥 SAFE CLOSE
+        if cursor is not None:
             cursor.close()
-        if conn:
+        if conn is not None:
             conn.close()

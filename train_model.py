@@ -1,35 +1,41 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-import pandas as pd
 import joblib
 
-# Load data
+# =========================
+# LOAD DATA
+# =========================
 df = pd.read_csv("dataset.csv")
 
-# Drop useless columns
+# Drop unnecessary columns
 df.drop(columns=["RowNumber", "CustomerId", "Surname"], inplace=True, errors='ignore')
 
-# Split features and target
+# =========================
+# FEATURES & TARGET
+# =========================
 X = df.drop("Churn", axis=1)
 y = df["Churn"]
 
 # Convert categorical to numeric
 X = pd.get_dummies(X, drop_first=True)
 
-# ✅ SAVE COLUMNS HERE (IMPORTANT)
-joblib.dump(X.columns, "columns.pkl")
+#PRINT COLUMNS (IMPORTANT - copy to Streamlit)
+print("MODEL COLUMNS:\n", list(X.columns))
 
-# Train-test split
-from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# =========================
+# TRAIN MODEL
+# =========================
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
-# Train model
-from sklearn.ensemble import RandomForestClassifier
 model = RandomForestClassifier()
 model.fit(X_train, y_train)
 
-# Save model
+# =========================
+# SAVE MODEL
+# =========================
 joblib.dump(model, "model.pkl")
 
-print("Model and columns saved successfully!")
+print("✅ Model saved successfully!")

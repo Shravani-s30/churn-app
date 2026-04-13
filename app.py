@@ -13,112 +13,26 @@ st.set_page_config(
 )
 
 # =========================
-# UI STYLE (ANIMATED)
-# =========================
-st.markdown("""
-<style>
-
-/* Background Animation */
-.stApp {
-    background: linear-gradient(-45deg, #a1c4fd, #c2e9fb, #fbc2eb, #fad0c4);
-    background-size: 400% 400%;
-    animation: gradientBG 10s ease infinite;
-}
-
-@keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-}
-
-/* Main container */
-.block-container {
-    background: rgba(255,255,255,0.9);
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-}
-
-/* Section Cards */
-.card {
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    background: rgba(255,255,255,0.8);
-    border: 1px solid #e5e7eb;
-    animation: fadeIn 0.6s ease;
-}
-
-@keyframes fadeIn {
-    from {opacity:0; transform: translateY(10px);}
-    to {opacity:1; transform: translateY(0);}
-}
-
-/* Title */
-h1 {
-    text-align: center;
-    color: #4c1d95;
-    font-weight: 800;
-}
-
-/* Button */
-.stButton > button {
-    width: 100%;
-    background: linear-gradient(90deg, #ff9a9e, #fad0c4);
-    color: #4c1d95;
-    font-size: 18px;
-    font-weight: 700;
-    padding: 0.8rem;
-    border-radius: 12px;
-    border: none;
-    transition: 0.3s;
-}
-
-.stButton > button:hover {
-    transform: scale(1.05);
-}
-
-/* Result */
-.result-box {
-    padding: 18px;
-    border-radius: 12px;
-    text-align: center;
-    font-weight: 700;
-    margin-top: 20px;
-    animation: pop 0.5s ease;
-}
-
-@keyframes pop {
-    from {transform: scale(0.8); opacity: 0;}
-    to {transform: scale(1); opacity: 1;}
-}
-
-.success {background: #d1fae5; color: #065f46;}
-.error {background: #fee2e2; color: #7f1d1d;}
-
-</style>
-""", unsafe_allow_html=True)
-
-# =========================
 # LOAD MODEL
 # =========================
 model = joblib.load("model.pkl")
-columns = joblib.load("columns.pkl")
+
+# 🔥 HARDCODED COLUMNS (COPY FROM TRAIN OUTPUT)
+MODEL_COLUMNS = [
+    'CreditScore','Age','Tenure','Balance','NumOfProducts',
+    'HasCrCard','IsActiveMember','EstimatedSalary',
+    'Geography_Germany','Geography_Spain','Gender_Male'
+]
 
 # =========================
-# HEADER
+# UI
 # =========================
-st.title("Customer Churn Predictor")
-# st.caption("✨ Smart + Cute AI Prediction")
+st.title("💖 Customer Churn Predictor")
 
-# =========================
-# FORM (NEW STRUCTURE)
-# =========================
 with st.form("churn_form"):
 
-    # -------- Section 1 --------
     st.subheader("👤 Customer Profile")
-    
+
     col1, col2 = st.columns(2)
     with col1:
         credit = st.number_input("Credit Score", min_value=0)
@@ -127,11 +41,7 @@ with st.form("churn_form"):
     with col2:
         geo = st.selectbox("Geography", ["France", "Germany", "Spain"])
         tenure = st.number_input("Tenure", min_value=0)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    # -------- Section 2 --------
-    
     st.subheader("💳 Account Details")
 
     col3, col4 = st.columns(2)
@@ -144,9 +54,6 @@ with st.form("churn_form"):
 
     salary = st.number_input("Estimated Salary", min_value=0.0)
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Submit Button
     submitted = st.form_submit_button("🚀 Predict Now")
 
 # =========================
@@ -154,40 +61,47 @@ with st.form("churn_form"):
 # =========================
 if submitted:
 
-    data = pd.DataFrame([{
-        "CreditScore": credit,
-        "Geography": geo,
-        "Gender": gender,
-        "Age": age,
-        "Tenure": tenure,
-        "Balance": balance,
-        "NumOfProducts": products,
-        "HasCrCard": card,
-        "IsActiveMember": active,
-        "EstimatedSalary": salary
-    }])
+    # 🔥 Create full feature structure
+    input_dict = {
+        'CreditScore': credit,
+        'Age': age,
+        'Tenure': tenure,
+        'Balance': balance,
+        'NumOfProducts': products,
+        'HasCrCard': card,
+        'IsActiveMember': active,
+        'EstimatedSalary': salary,
+        'Geography_Germany': 0,
+        'Geography_Spain': 0,
+        'Gender_Male': 0
+    }
 
-    data = pd.get_dummies(data)
-    data = data.reindex(columns=columns, fill_value=0)
+    # Encoding logic
+    if geo == "Germany":
+        input_dict['Geography_Germany'] = 1
+    elif geo == "Spain":
+        input_dict['Geography_Spain'] = 1
 
+    if gender == "Male":
+        input_dict['Gender_Male'] = 1
+
+    # Convert to DataFrame
+    data = pd.DataFrame([input_dict])
+
+    # Ensure correct column order
+    data = data[MODEL_COLUMNS]
+
+    # Prediction
     pred = model.predict(data)[0]
     label = "CHURN" if pred == 1 else "STAY"
 
+    # Output
     if label == "CHURN":
-        st.markdown('<div class="result-box error">⚠️ Customer may CHURN 💔</div>', unsafe_allow_html=True)
+        st.error("⚠️ Customer may CHURN 💔")
     else:
-        st.markdown('<div class="result-box success">🎉 Customer will STAY 💖</div>', unsafe_allow_html=True)
+        st.success("🎉 Customer will STAY 💖")
 
-    # Save
-    save_prediction({
-        "CreditScore": credit,
-        "Age": age,
-        "Tenure": tenure,
-        "Balance": balance,
-        "NumOfProducts": products,
-        "HasCrCard": card,
-        "IsActiveMember": active,
-        "EstimatedSalary": salary
-    }, label)
+    # Save to DB
+    save_prediction(input_dict, label)
 
     st.success("✔ Saved successfully")
