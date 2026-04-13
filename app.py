@@ -8,7 +8,7 @@ from database import save_prediction
 # =========================
 st.set_page_config(
     page_title="Churn Predictor",
-    page_icon="💖",
+    page_icon="",
     layout="centered"
 )
 
@@ -27,7 +27,7 @@ MODEL_COLUMNS = [
 # =========================
 # UI
 # =========================
-st.title("💖 Customer Churn Predictor")
+st.title("Customer Churn Predictor")
 
 with st.form("churn_form"):
 
